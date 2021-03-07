@@ -150,7 +150,6 @@ struct json_kit *json_parse(char *const string, int index) {
 
 // this parses a single element/value
 struct json_value_t *json_parse_new(char *const string, int index) {
-  // figure out element and parse it
   struct json_value_t *value = malloc(sizeof(struct json_value_t));
   value->next = NULL;
 
@@ -159,10 +158,21 @@ struct json_value_t *json_parse_new(char *const string, int index) {
     if (ch == '{') {
       // object
     } else if (ch == '[') {
+      printf("parse array\n");
+      struct json_value_t *children = NULL;
+      children = json_parse_new(string, cursor + 1);
+      // if next ] then end array, if , then go and parse next one
+
+      value->next = children;
+      value->type = json_array;
+
+      // just break instead of processsingall
+      break;
     } else if (ch == '"') {
       value->string_value = parse_string_value(string, &cursor);
       value->type = json_string;
     } else if (isdigit(ch)) {
+      printf("parse digit\n");
       value->value = parse_number_value(string, &cursor);
       value->type = json_number;
     } else if (ch == 't' || ch == 'f') {
@@ -182,8 +192,9 @@ struct json_value_t *json_parse(char *const string) {
 }
 
 
-void json_print(struct json_t *root) {
-  struct json_value_t *value = root->values;
+void json_print(struct json_value_t *root) {
+  struct json_value_t *value = root;
+
   for (; value != NULL; value = value->next) {
     if (value->type == json_string) {
       printf("(key:value) = (%s:%s)\n", value->name, value->string_value);
@@ -193,11 +204,13 @@ void json_print(struct json_t *root) {
       printf("(key:value) = (%s:%d)\n", value->name, value->boolean_value);
     } else if (value->type == json_null) {
       printf("(key:value) = (%s:NULL)\n", value->name);
+    } else if (value->type == json_array) {
+      printf("(key:value) = (%s:ARRAY)\n", value->name);
     }
   }
 }
 
-void json_free(struct json_t *root) {
+void json_free(struct json_value_t *root) {
   // TODO: implement this properly, all the "nodes"
   // need to be freed
   free(root);

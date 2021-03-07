@@ -14,6 +14,7 @@ typedef enum {
 
 struct json_value_t {
   struct json_value_t *next;
+  struct json_value_t *children;
   json_type_t type;
 
   char *name; // "name" of the property AKA key
@@ -24,13 +25,8 @@ struct json_value_t {
   struct json_t *json; // object or array
 };
 
-struct json_t {
-  json_type_t type;
-  struct json_value_t *values; 
-};
-
-void json_print(struct json_t *root);
-void json_free(struct json_t *root);
+void json_print(struct json_value_t *root);
+void json_free(struct json_value_t *root);
 
 struct json_value_t *json_parse(char *const string);
 struct json_value_t *json_parse_new(char *const string, int index);
