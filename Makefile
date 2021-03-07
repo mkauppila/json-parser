@@ -2,7 +2,7 @@ main: main.o json.o
 	$(CC) json.o main.o -o main
 
 test: test.o json.o
-	$(CC) test.o -o test
+	$(CC) test.o json.o -o test
 
 main.o: main.c
 	$(CC) -c main.c -o main.o

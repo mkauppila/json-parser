@@ -102,8 +102,8 @@ struct json_value_t *parse_key_value(char *const string, int *index) {
 
   return value;
 }
-
-struct json_t *json_parse(char *const string, int index) {
+/*
+struct json_kit *json_parse(char *const string, int index) {
   struct json_t *node = malloc(sizeof(struct json_t));
   node->values = NULL;
   node->type = json_object;
@@ -146,6 +146,41 @@ struct json_t *json_parse(char *const string, int index) {
   }
   return node;
 }
+*/
+
+// this parses a single element/value
+struct json_value_t *json_parse_new(char *const string, int index) {
+  // figure out element and parse it
+  struct json_value_t *value = malloc(sizeof(struct json_value_t));
+  value->next = NULL;
+
+  for (int cursor = index; cursor < strlen(string); ++cursor) {
+    char ch = string[cursor];
+    if (ch == '{') {
+      // object
+    } else if (ch == '[') {
+    } else if (ch == '"') {
+      value->string_value = parse_string_value(string, &cursor);
+      value->type = json_string;
+    } else if (isdigit(ch)) {
+      value->value = parse_number_value(string, &cursor);
+      value->type = json_number;
+    } else if (ch == 't' || ch == 'f') {
+      value->boolean_value = parse_boolean_value(string, &cursor);
+      value->type = json_boolean;
+    } else if (ch == 'n') {
+      parse_null_value(string, &cursor);
+      value->type = json_null;
+    }
+  }
+
+  return value;
+}
+
+struct json_value_t *json_parse(char *const string) {
+  return json_parse_new(string, 0);
+}
+
 
 void json_print(struct json_t *root) {
   struct json_value_t *value = root->values;
