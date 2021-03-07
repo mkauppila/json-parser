@@ -2,23 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef enum {
   json_number = 0,
-  json_string = 1,
-  json_object = 3,
+  json_string,
+  json_boolean,
+  json_null,
+  json_object,
 } json_type_t;
 
 struct json_t;
 void json_print(struct json_t *root);
 
 struct json_value_t {
-  struct json_value_t *next; // it's a linked list
+  struct json_value_t *next;
   json_type_t type;
 
   char *name; // "name" of the property AKA key
 
   int value;           // numeric value. int, decimal, boolean?
+  bool boolean_value;   // for boolean
   char *string_value;  // string value
   struct json_t *json; // object or array
 };
@@ -32,7 +36,6 @@ char *parse_key(char *const string, int *index) {
   if (string[*index] == '"') {
   } else {
     printf("invalid character, expected '\"', got '%c'", string[*index]);
-    // excepted " character
   }
   (*index)++;
 
@@ -79,6 +82,24 @@ int parse_number_value(char *const string, int *index) {
   return number;
 }
 
+bool parse_boolean_value(char *const string, int *index) {
+  if (string[*index] == 't') {
+    (*index) += 4;
+    return true;
+  } else {
+    (*index) += 5;
+    return false;
+  }
+}
+
+void *parse_null_value(char *const string, int *index) {
+  if (string[*index] == 'n') {
+    (*index) += 4;
+    return NULL; // what to return here adnd what to do with this?
+  }
+  return NULL; // FIXME also what to do here?
+}
+
 struct json_value_t *parse_key_value(char *const string, int *index) {
   struct json_value_t *value = malloc(sizeof(struct json_value_t));
   value->next = NULL;
@@ -94,9 +115,13 @@ struct json_value_t *parse_key_value(char *const string, int *index) {
   } else if (isdigit(string[*index])) {
     value->value = parse_number_value(string, index);
     value->type = json_number;
+  } else if (string[*index] == 't' || string[*index] == 'f') {
+    value->boolean_value = parse_boolean_value(string, index);
+    value->type = json_boolean;
+  } else if (string[*index] == 'n') {
+    value->string_value = parse_null_value(string, index);
+    value->type = json_null;
   }
-  // parse the value (in this case another string)
-  // if ? -> undefined? null?
   // if { -> object
   // if [ -> array
 
@@ -154,6 +179,10 @@ void json_print(struct json_t *root) {
       printf("(key:value) = (%s:%s)\n", value->name, value->string_value);
     } else if (value->type == json_number) {
       printf("(key:value) = (%s:%d)\n", value->name, value->value);
+    } else if (value->type == json_boolean) {
+      printf("(key:value) = (%s:%d)\n", value->name, value->boolean_value);
+    } else if (value->type == json_null) {
+      printf("(key:value) = (%s:NULL)\n", value->name);
     }
   }
 }
@@ -165,7 +194,7 @@ void json_free(struct json_t *root) {
 }
 
 int main(int argc, char *argv[]) {
-  struct json_t *json = json_parse("{\"msg-hello\":12345,\"foo\":\"bar\"}", 0);
+  struct json_t *json = json_parse("{\"msg-hello\":12345,\"a\":null,\"isEnabled\":false,\"foo\":\"bar\"}", 0);
   printf("parsing done succesfully!\n");
   json_print(json);
 
