@@ -7,7 +7,7 @@
 
 #include "json.h"
 
-char *parse_key(char *const string, int *index) {
+char *parse_string_value(char *const string, int *index) {
   if (string[*index] == '"') {
   } else {
     printf("invalid character, expected '\"', got '%c'", string[*index]);
@@ -30,11 +30,6 @@ char *parse_key(char *const string, int *index) {
   }
 
   return key;
-}
-
-char *parse_string_value(char *const string, int *index) {
-  // parse key does the exact same thing
-  return parse_key(string, index);
 }
 
 int strnum(char *s, int n) {
