@@ -29,6 +29,6 @@ void json_print(struct json_value_t *root);
 void json_free(struct json_value_t *root);
 
 struct json_value_t *json_parse(char *const string);
-struct json_value_t *json_parse_new(char *const string, int index);
+struct json_value_t *json_parse_new(char *const string, int *index);
 
 #endif 

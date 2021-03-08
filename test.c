@@ -40,14 +40,24 @@ void test_parsing_integer() {
   assert(root->value == 12345);
 }
 
-void test_parsing_integer_array() {
+void test_parsing_integer_array_single_item() {
   printf("Test parsing '[1]'\n");
   struct json_value_t *root = json_parse("[1]");
   assert(root->type == json_array);
   assert(root->next->type == json_number);
   assert(root->next->value == 1);
   assert(root->next->next == NULL);
-  json_print(root);
+}
+
+void test_parsing_integer_array_multiple_items() {
+  printf("Test parsing '[1,2]'\n");
+  struct json_value_t *root = json_parse("[1,2,3]");
+  assert(root->type == json_array);
+  assert(root->next->type == json_number);
+  assert(root->next->value == 1);
+  assert(root->next->next->value == 2);
+  assert(root->next->next->next->value == 3);
+  assert(root->next->next->next->next == NULL);
 }
 
 int main(int argc, char *argv[]) {
@@ -56,7 +66,8 @@ int main(int argc, char *argv[]) {
   test_parsing_false();
   test_parsing_string();
   test_parsing_integer();
-  test_parsing_integer_array();
+  test_parsing_integer_array_single_item();
+  test_parsing_integer_array_multiple_items();
 
   printf("Tests OK\n");
 
