@@ -144,13 +144,16 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
         const int length = strlen(v->string_value);
         value->string_value = malloc(length * sizeof(char));
         strncpy(value->string_value, v->string_value, length);
-        // TODO deallocate the v!
-        value->type = json_string;
+      } else if (v->type == json_number) {
+        value->value = v->value;
+      } else if (v->type == json_boolean) {
+        value->boolean_value = v->boolean_value;
       } else {
-        // handle basic cases and fall to object is it's an object,
-        // what about the arrays?
+        // default case for objects, arrays and null
         value->json_value = v;
       }
+      // TODO deallocate the v!
+      value->type = v->type;
     } else {
       value->string_value = parse_string_value(string, cursor);
       value->type = json_string;

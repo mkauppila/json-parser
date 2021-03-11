@@ -81,7 +81,6 @@ void test_parsing_object_with_multiple_strings() {
   struct json_value_t *root = json_parse("{\"message\":\"hello world!\",\"foo\":\"bar\"}");
 
   assert(root->type == json_object);
-  assert(root->type == json_object);
   assert(root->children != NULL);
 
   assert(root->children->type == json_string);
@@ -91,6 +90,53 @@ void test_parsing_object_with_multiple_strings() {
   assert(root->children->next->type == json_string);
   assert(strcmp(root->children->next->name, "foo") == 0);
   assert(strcmp(root->children->next->string_value, "bar") == 0);
+}
+
+void test_parsing_object_with_multiple_basic_values() {
+  printf("Test parsing '{\"foo\":\"bar\",\"number\":12345,\"true\":true,\"false\":false}'\n");
+
+  struct json_value_t *root = json_parse("{\"foo\":\"bar\",\"number\":12345,\"true\":true,\"false\":false,\"null\":null}");
+
+  assert(root->type == json_object);
+  assert(root->children != NULL);
+
+  assert(root->children->type == json_string);
+  assert(strcmp(root->children->name, "foo") == 0);
+  assert(strcmp(root->children->string_value, "bar") == 0);
+
+  assert(root->children->next->type == json_number);
+  assert(strcmp(root->children->next->name, "number") == 0);
+  assert(root->children->next->value == 12345);
+
+  assert(root->children->next->next->type == json_boolean);
+  assert(strcmp(root->children->next->next->name, "true") == 0);
+  assert(root->children->next->next->boolean_value == true);
+
+  assert(root->children->next->next->next->type == json_boolean);
+  assert(strcmp(root->children->next->next->next->name, "false") == 0);
+  assert(root->children->next->next->next->boolean_value == false);
+
+  assert(root->children->next->next->next->next->type == json_null);
+  assert(strcmp(root->children->next->next->next->next->name, "null") == 0);
+}
+
+void test_parsing_object_with_object() {
+  printf("Test parsing '{\"foo\":{\"bar\":1}}'\n");
+
+  struct json_value_t *root = json_parse("{\"foo\":{\"bar\":1}}");
+  json_print(root);
+
+  assert(root->type == json_object);
+  assert(root->children != NULL);
+
+  assert(root->children->type == json_object);
+  assert(strcmp(root->children->name, "foo") == 0);
+  assert(root->children->json_value != NULL);
+  assert(root->children->json_value->type == json_object);
+
+  assert(root->children->json_value->children->type == json_number);
+  assert(strcmp(root->children->json_value->children->name, "bar") == 0);
+  assert(root->children->json_value->children->value == 1);
 }
 
 int main(int argc, char *argv[]) {
@@ -103,6 +149,8 @@ int main(int argc, char *argv[]) {
   test_parsing_integer_array_multiple_items();
   test_parsing_object_with_string();
   test_parsing_object_with_multiple_strings();
+  test_parsing_object_with_multiple_basic_values();
+  test_parsing_object_with_object();
 
   printf("Tests OK\n");
 
