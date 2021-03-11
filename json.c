@@ -79,9 +79,11 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
     // jump over the '{'
     ++(*cursor);
 
+    value->type = json_object;
+    value->next = NULL;
+
     children = json_parse_new(string, cursor);
     value->children = children;
-    value->type = json_object;
 
     struct json_value_t *next = children;
     while (string[*cursor] == ',') {
@@ -97,15 +99,16 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
       // fail with error
     } 
   } else if (ch == '[') {
-    struct json_value_t *children = NULL;
     // jump over the '['
     ++(*cursor);
 
-    children = json_parse_new(string, cursor);
-    value->next = children;
     value->type = json_array;
+    value->next = NULL;
 
-    struct json_value_t *next = children;
+    struct json_value_t *child = json_parse_new(string, cursor);
+    value->children = child;
+
+    struct json_value_t *next = child;
     while (string[*cursor] == ',') {
       // skip the comma
       ++(*cursor);
@@ -118,8 +121,6 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
     if (string[*cursor] != ']') {
       // fail with error
     } 
-
-    value->next = children;
   } else if (ch == '"') {
     // peek ahead if this is just a string or a key-value pair
     int peekCursor = *cursor + 1;
@@ -188,7 +189,7 @@ void json_print(struct json_value_t *root) {
     printf("(key:value) = (%s:NULL)\n", value->name);
   } else if (value->type == json_array) {
     printf("(key:value) = (%s:ARRAY)\n", value->name);
-    for (struct json_value_t *child = value->next; child != NULL; child = child->next ) {
+    for (struct json_value_t *child = value->children; child != NULL; child = child->next ) {
       // printf("key: %s %s\n", child->name, );
       json_print(child);
     }
