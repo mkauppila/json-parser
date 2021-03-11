@@ -60,6 +60,29 @@ void test_parsing_integer_array_multiple_items() {
   assert(root->next->next->next->next == NULL);
 }
 
+void test_parsing_object_with_string() {
+  printf("Test parsing '{\"message\":\"hello world!\"}'\n");
+  struct json_value_t *root = json_parse("{\"message\":\"hello world!\"}");
+  assert(root->type == json_object);
+  assert(root->children != NULL);
+  assert(root->children->type == json_string);
+  assert(strcmp(root->children->name, "message") == 0);
+  assert(strcmp(root->children->string_value, "hello world!") == 0);
+}
+
+void test_parsing_object_with_multiple_strings() {
+  printf("Test parsing '{\"message\":\"hello world!\",\"foo\":\"bar\"}'\n");
+  struct json_value_t *root = json_parse("{\"message\":\"hello world!\",\"foo\":\"bar\"}");
+  assert(root->type == json_object);
+  assert(root->type == json_object);
+  assert(root->children != NULL);
+  assert(root->children->type == json_string);
+  assert(strcmp(root->children->name, "message") == 0);
+  assert(strcmp(root->children->string_value, "hello world!") == 0);
+  assert(strcmp(root->children->next->name, "foo") == 0);
+  assert(strcmp(root->children->next->string_value, "bar") == 0);
+}
+
 int main(int argc, char *argv[]) {
   test_parsing_null();
   test_parsing_true();
@@ -68,6 +91,8 @@ int main(int argc, char *argv[]) {
   test_parsing_integer();
   test_parsing_integer_array_single_item();
   test_parsing_integer_array_multiple_items();
+  test_parsing_object_with_string();
+  test_parsing_object_with_multiple_strings();
 
   printf("Tests OK\n");
 

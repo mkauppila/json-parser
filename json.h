@@ -22,7 +22,7 @@ struct json_value_t {
   int value;           // numeric value. int, decimal, boolean?
   bool boolean_value;  // for boolean
   char *string_value;  // string value
-  struct json_t *json; // object or array
+  struct json_value_t *json_value; // object or array // FIXME unused at the moment
 };
 
 void json_print(struct json_value_t *root);
