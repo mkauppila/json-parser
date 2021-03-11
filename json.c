@@ -69,7 +69,7 @@ void parse_null_value(char *const string, int *index) {
   }
 }
 
-struct json_value_t *json_parse_new(char *const string, int *cursor) {
+struct json_value_t *json_parse_internal(char *const string, int *cursor) {
   struct json_value_t *value = malloc(sizeof(struct json_value_t));
   value->next = NULL;
 
@@ -82,7 +82,7 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
     value->type = json_object;
     value->next = NULL;
 
-    children = json_parse_new(string, cursor);
+    children = json_parse_internal(string, cursor);
     value->children = children;
 
     struct json_value_t *next = children;
@@ -90,7 +90,7 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
       // skip the comma
       ++(*cursor);
 
-      struct json_value_t *ch = json_parse_new(string, cursor);
+      struct json_value_t *ch = json_parse_internal(string, cursor);
       next->next = ch;
       next = ch;
     }
@@ -105,7 +105,7 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
     value->type = json_array;
     value->next = NULL;
 
-    struct json_value_t *child = json_parse_new(string, cursor);
+    struct json_value_t *child = json_parse_internal(string, cursor);
     value->children = child;
 
     struct json_value_t *next = child;
@@ -113,7 +113,7 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
       // skip the comma
       ++(*cursor);
 
-      struct json_value_t *ch = json_parse_new(string, cursor);
+      struct json_value_t *ch = json_parse_internal(string, cursor);
       next->next = ch;
       next = ch;
     }
@@ -139,7 +139,7 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
         (*cursor)++; 
       }
 
-      struct json_value_t *v = json_parse_new(string, cursor);
+      struct json_value_t *v = json_parse_internal(string, cursor);
       if (v->type == json_string) {
         const int length = strlen(v->string_value);
         value->string_value = malloc(length * sizeof(char));
@@ -174,7 +174,7 @@ struct json_value_t *json_parse_new(char *const string, int *cursor) {
 
 struct json_value_t *json_parse(char *const string) {
   int index = 0;
-  return json_parse_new(string, &index);
+  return json_parse_internal(string, &index);
 }
 
 
