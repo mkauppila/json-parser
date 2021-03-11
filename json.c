@@ -1,9 +1,9 @@
 
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include "json.h"
 
@@ -69,9 +69,15 @@ void parse_null_value(char *const string, int *index) {
   }
 }
 
-struct json_value_t *json_parse_internal(char *const string, int *cursor) {
+struct json_value_t *create_json_value() {
   struct json_value_t *value = malloc(sizeof(struct json_value_t));
+  value->children = NULL;
   value->next = NULL;
+  return value;
+}
+
+struct json_value_t *json_parse_internal(char *const string, int *cursor) {
+  struct json_value_t *value = create_json_value();
 
   char ch = string[*cursor];
   if (ch == '{') {
@@ -97,7 +103,9 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
 
     if (string[*cursor] != '}') {
       // fail with error
-    } 
+    } else {
+      ++(*cursor);
+    }
   } else if (ch == '[') {
     // jump over the '['
     ++(*cursor);
@@ -120,7 +128,9 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
 
     if (string[*cursor] != ']') {
       // fail with error
-    } 
+    } else {
+      ++(*cursor);
+    }
   } else if (ch == '"') {
     // peek ahead if this is just a string or a key-value pair
     int peekCursor = *cursor + 1;
@@ -129,14 +139,14 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
       if (string[peekCursor + 1] == ':') {
         isKeyValuePair = true;
       }
-    } 
+    }
 
     if (isKeyValuePair) {
       value->name = parse_string_value(string, cursor);
       if (string[*cursor] != ':') {
         printf("Expecting ':', got '%c'\n", string[*cursor]);
       } else {
-        (*cursor)++; 
+        (*cursor)++;
       }
 
       struct json_value_t *v = json_parse_internal(string, cursor);
@@ -177,10 +187,13 @@ struct json_value_t *json_parse(char *const string) {
   return json_parse_internal(string, &index);
 }
 
-
 void json_print(struct json_value_t *root) {
   struct json_value_t *value = root;
-  
+  if (root == NULL) {
+    printf("root is NULL\n");
+    return;
+  }
+
   if (value->type == json_string) {
     printf("print string\n");
     printf("(key:value) = (%s:%s)\n", value->name, value->string_value);
@@ -192,18 +205,25 @@ void json_print(struct json_value_t *root) {
     printf("(key:value) = (%s:NULL)\n", value->name);
   } else if (value->type == json_array) {
     printf("(key:value) = (%s:ARRAY)\n", value->name);
-    for (struct json_value_t *child = value->children; child != NULL; child = child->next ) {
-      // printf("key: %s %s\n", child->name, );
+    if (value->children) {
+      printf("array has items");
+    }
+    for (struct json_value_t *child = value->children; child != NULL;
+         child = child->next) {
       json_print(child);
     }
   } else if (value->type == json_object) {
-    printf("object %s\n", value->name);
-    for (struct json_value_t *child = value->children; child != NULL; child = child->next ) {
-      // printf("key: %s %s\n", child->name, );
+    printf("(key:value) = (%s:OBJECT)\n", value->name);
+    for (struct json_value_t *child = value->children; child != NULL;
+         child = child->next) {
       json_print(child);
     }
   }
 }
+
+// void destroy_json_value(struct json_value_t *value) {
+//   free(value->string_value)
+// }
 
 void json_free(struct json_value_t *root) {
   // TODO: implement this properly, all the "nodes"
