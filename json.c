@@ -7,6 +7,13 @@
 
 #include "json.h"
 
+void parse_white_space(char *const string, int *index) {
+  for (char ch = string[*index];
+       ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
+       ch = string[++(*index)]) {
+  }
+}
+
 char *parse_string_value(char *const string, int *index) {
   if (string[*index] == '"') {
   } else {
@@ -79,11 +86,17 @@ struct json_value_t *create_json_value() {
 struct json_value_t *json_parse_internal(char *const string, int *cursor) {
   struct json_value_t *value = create_json_value();
 
+  parse_white_space(string, cursor);
+
   char ch = string[*cursor];
   if (ch == '{') {
+    parse_white_space(string, cursor);
+
     struct json_value_t *children = NULL;
     // jump over the '{'
     ++(*cursor);
+
+    parse_white_space(string, cursor);
 
     value->type = json_object;
     value->next = NULL;
@@ -91,15 +104,21 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     children = json_parse_internal(string, cursor);
     value->children = children;
 
+    parse_white_space(string, cursor);
+
     struct json_value_t *next = children;
     while (string[*cursor] == ',') {
       // skip the comma
       ++(*cursor);
 
+      parse_white_space(string, cursor);
+
       struct json_value_t *ch = json_parse_internal(string, cursor);
       next->next = ch;
       next = ch;
     }
+
+    parse_white_space(string, cursor);
 
     if (string[*cursor] != '}') {
       // fail with error
@@ -110,21 +129,29 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     // jump over the '['
     ++(*cursor);
 
+    parse_white_space(string, cursor);
+
     value->type = json_array;
     value->next = NULL;
 
     struct json_value_t *child = json_parse_internal(string, cursor);
     value->children = child;
 
+    parse_white_space(string, cursor);
+
     struct json_value_t *next = child;
     while (string[*cursor] == ',') {
       // skip the comma
       ++(*cursor);
 
+      parse_white_space(string, cursor);
+
       struct json_value_t *ch = json_parse_internal(string, cursor);
       next->next = ch;
       next = ch;
     }
+
+    parse_white_space(string, cursor);
 
     if (string[*cursor] != ']') {
       // fail with error
@@ -135,19 +162,29 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     // peek ahead if this is just a string or a key-value pair
     int peekCursor = *cursor + 1;
     bool isKeyValuePair = false;
+    // find the next ""
     while (string[peekCursor++] != '"') {
-      if (string[peekCursor + 1] == ':') {
-        isKeyValuePair = true;
-      }
+    }
+    // eat the whitespace
+    parse_white_space(string, &peekCursor);
+
+    if (string[peekCursor++] == ':') {
+      isKeyValuePair = true;
     }
 
     if (isKeyValuePair) {
+      parse_white_space(string, cursor);
+
       value->name = parse_string_value(string, cursor);
+
+      parse_white_space(string, cursor);
       if (string[*cursor] != ':') {
         printf("Expecting ':', got '%c'\n", string[*cursor]);
       } else {
         (*cursor)++;
       }
+
+      parse_white_space(string, cursor);
 
       struct json_value_t *v = json_parse_internal(string, cursor);
       if (v->type == json_string) {
@@ -178,6 +215,8 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     parse_null_value(string, cursor);
     value->type = json_null;
   }
+
+  parse_white_space(string, cursor);
 
   return value;
 }

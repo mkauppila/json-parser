@@ -151,6 +151,52 @@ void test_parsing_object_with_object_and_array() {
                 "hello") == 0);
 }
 
+void test_parsing_null_with_whitespace() {
+  printf("Test parsing 'null' with whitespace\n");
+  struct json_value_t *root = json_parse(" \t \n \r null  ");
+  assert(root->type == json_null);
+}
+
+void test_parsing_object_with_whitespace() {
+  printf("Test parsing ...\n");
+
+  struct json_value_t *root = json_parse(
+      "\t { \"foo\": \"bar\",\n\t\"number\" : 12345,\"true\" "
+      ":\ttrue,\"false\"\t\r:false,\"null\" : null,\r \"arr\": [1, 2,3]}");
+
+  assert(root->type == json_object);
+  assert(root->children != NULL);
+
+  assert(root->children->type == json_string);
+  assert(strcmp(root->children->name, "foo") == 0);
+  assert(strcmp(root->children->string_value, "bar") == 0);
+
+  assert(root->children->next->type == json_number);
+  assert(strcmp(root->children->next->name, "number") == 0);
+  assert(root->children->next->value == 12345);
+
+  assert(root->children->next->next->type == json_boolean);
+  assert(strcmp(root->children->next->next->name, "true") == 0);
+  assert(root->children->next->next->boolean_value == true);
+
+  assert(root->children->next->next->next->type == json_boolean);
+  assert(strcmp(root->children->next->next->next->name, "false") == 0);
+  assert(root->children->next->next->next->boolean_value == false);
+
+  assert(root->children->next->next->next->next->type == json_null);
+  assert(strcmp(root->children->next->next->next->next->name, "null") == 0);
+
+  assert(root->children->next->next->next->next->next->type == json_array);
+  assert(strcmp(root->children->next->next->next->next->next->name, "arr") ==
+         0);
+
+  struct json_value_t *array = root->children->next->next->next->next->next;
+  // TODO: somewhoe this json_value is really confusing, shouldn't this just be
+  assert(array->json_value->children->value == 1);
+  assert(array->json_value->children->next->value == 2);
+  assert(array->json_value->children->next->next->value == 3);
+}
+
 int main(int argc, char *argv[]) {
   test_parsing_null();
   test_parsing_true();
@@ -163,6 +209,8 @@ int main(int argc, char *argv[]) {
   test_parsing_object_with_multiple_strings();
   test_parsing_object_with_multiple_basic_values();
   test_parsing_object_with_object_and_array();
+  test_parsing_null_with_whitespace();
+  test_parsing_object_with_whitespace();
 
   printf("Tests OK\n");
 
