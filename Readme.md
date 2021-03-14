@@ -1,6 +1,6 @@
-# A JSON parser
+# A JSON Parser
 
-A C99 compliant json parser. Supports a subset of the [json specification](https://www.json.org/json-en.html)
+A C99 compliant json parser. Supports a subset of the [json specification](https://www.json.org/json-en.html).
 
 ## Todo
 
