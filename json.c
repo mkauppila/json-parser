@@ -7,6 +7,37 @@
 
 #include "json.h"
 
+struct json_value_t *create_json_value() {
+  struct json_value_t *value = malloc(sizeof(struct json_value_t));
+  value->children = NULL;
+  value->next = NULL;
+  value->string_value = NULL;
+  value->name = NULL;
+  value->json_value = NULL;
+
+  return value;
+}
+
+void json_free(struct json_value_t *root) {
+  if (root->children) {
+    json_free(root->children);
+  }
+  if (root->next) {
+    json_free(root->next);
+  }
+  if (root->json_value) {
+    json_free(root->json_value);
+  }
+
+  if (root->string_value) {
+    free(root->string_value);
+  }
+  if (root->name) {
+    free(root->name);
+  }
+  free(root);
+}
+
 void parse_white_space(char *const string, int *index) {
   for (char ch = string[*index];
        ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
@@ -28,8 +59,9 @@ char *parse_string_value(char *const string, int *index) {
     }
     len++;
   }
-  char *key = malloc(len * sizeof(char)); // is there space for the '\0'? No??
+  char *key = malloc((len + 1) * sizeof(char));
   memcpy(key, (string + ((*index) - len)), len);
+  key[len] = '\0';
 
   // consume the '"' character at the end
   if (string[*index] == '"') {
@@ -74,13 +106,6 @@ void parse_null_value(char *const string, int *index) {
   if (string[*index] == 'n') {
     (*index) += 4;
   }
-}
-
-struct json_value_t *create_json_value() {
-  struct json_value_t *value = malloc(sizeof(struct json_value_t));
-  value->children = NULL;
-  value->next = NULL;
-  return value;
 }
 
 struct json_value_t *json_parse_internal(char *const string, int *cursor) {
@@ -191,15 +216,17 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
         const int length = strlen(v->string_value);
         value->string_value = malloc(length * sizeof(char));
         strncpy(value->string_value, v->string_value, length);
+        json_free(v);
       } else if (v->type == json_number) {
         value->value = v->value;
+        json_free(v);
       } else if (v->type == json_boolean) {
         value->boolean_value = v->boolean_value;
+        json_free(v);
       } else {
         // default case for objects, arrays and null
         value->json_value = v;
       }
-      // TODO deallocate the v!
       value->type = v->type;
     } else {
       value->string_value = parse_string_value(string, cursor);
@@ -258,14 +285,4 @@ void json_print(struct json_value_t *root) {
       json_print(child);
     }
   }
-}
-
-// void destroy_json_value(struct json_value_t *value) {
-//   free(value->string_value)
-// }
-
-void json_free(struct json_value_t *root) {
-  // TODO: implement this properly, all the "nodes"
-  // need to be freed
-  free(root);
 }

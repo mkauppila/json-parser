@@ -10,6 +10,8 @@ void test_parsing_null() {
   printf("Test parsing 'null'\n");
   struct json_value_t *root = json_parse("null");
   assert(root->type == json_null);
+
+  json_free(root);
 }
 
 void test_parsing_true() {
@@ -17,6 +19,8 @@ void test_parsing_true() {
   struct json_value_t *root = json_parse("true");
   assert(root->type == json_boolean);
   assert(root->boolean_value == true);
+
+  json_free(root);
 }
 
 void test_parsing_false() {
@@ -24,6 +28,8 @@ void test_parsing_false() {
   struct json_value_t *root = json_parse("false");
   assert(root->type == json_boolean);
   assert(root->boolean_value == false);
+
+  json_free(root);
 }
 
 void test_parsing_string() {
@@ -31,6 +37,8 @@ void test_parsing_string() {
   struct json_value_t *root = json_parse("\"hello\"");
   assert(root->type == json_string);
   assert(strcmp(root->string_value, "hello") == 0);
+
+  json_free(root);
 }
 
 void test_parsing_integer() {
@@ -38,6 +46,8 @@ void test_parsing_integer() {
   struct json_value_t *root = json_parse("12345");
   assert(root->type == json_number);
   assert(root->value == 12345);
+
+  json_free(root);
 }
 
 void test_parsing_integer_array_single_item() {
@@ -47,6 +57,8 @@ void test_parsing_integer_array_single_item() {
   assert(root->children->type == json_number);
   assert(root->children->value == 1);
   assert(root->children->next == NULL);
+
+  json_free(root);
 }
 
 void test_parsing_integer_array_multiple_items() {
@@ -62,6 +74,8 @@ void test_parsing_integer_array_multiple_items() {
   assert(root->children->next->next->type == json_number);
   assert(root->children->next->next->value == 3);
   assert(root->children->next->next->next == NULL);
+
+  json_free(root);
 }
 
 void test_parsing_object_with_string() {
@@ -74,6 +88,8 @@ void test_parsing_object_with_string() {
 
   assert(strcmp(root->children->name, "message") == 0);
   assert(strcmp(root->children->string_value, "hello world!") == 0);
+
+  json_free(root);
 }
 
 void test_parsing_object_with_multiple_strings() {
@@ -91,6 +107,14 @@ void test_parsing_object_with_multiple_strings() {
   assert(root->children->next->type == json_string);
   assert(strcmp(root->children->next->name, "foo") == 0);
   assert(strcmp(root->children->next->string_value, "bar") == 0);
+
+  json_free(root);
+}
+
+void mem_leak_test() {
+  printf("mem leak");
+  struct json_value_t *root = json_parse("{\"null\":null}");
+  json_free(root);
 }
 
 void test_parsing_object_with_multiple_basic_values() {
@@ -123,6 +147,8 @@ void test_parsing_object_with_multiple_basic_values() {
 
   assert(root->children->next->next->next->next->type == json_null);
   assert(strcmp(root->children->next->next->next->next->name, "null") == 0);
+
+  json_free(root);
 }
 
 void test_parsing_object_with_object_and_array() {
@@ -149,12 +175,16 @@ void test_parsing_object_with_object_and_array() {
   assert(root->children->next->json_value->children->value = 1);
   assert(strcmp(root->children->next->json_value->children->next->string_value,
                 "hello") == 0);
+
+  json_free(root);
 }
 
 void test_parsing_null_with_whitespace() {
   printf("Test parsing 'null' with whitespace\n");
   struct json_value_t *root = json_parse(" \t \n \r null  ");
   assert(root->type == json_null);
+
+  json_free(root);
 }
 
 void test_parsing_object_with_whitespace() {
@@ -195,6 +225,8 @@ void test_parsing_object_with_whitespace() {
   assert(array->json_value->children->value == 1);
   assert(array->json_value->children->next->value == 2);
   assert(array->json_value->children->next->next->value == 3);
+
+  json_free(root);
 }
 
 int main(int argc, char *argv[]) {
@@ -211,6 +243,8 @@ int main(int argc, char *argv[]) {
   test_parsing_object_with_object_and_array();
   test_parsing_null_with_whitespace();
   test_parsing_object_with_whitespace();
+
+  mem_leak_test();
 
   printf("Tests OK\n");
 

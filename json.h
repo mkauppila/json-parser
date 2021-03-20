@@ -19,7 +19,7 @@ struct json_value_t {
 
   char *name; // "name" of the property AKA key
 
-  int value;                       // numeric value. int, decimal, boolean?
+  int value;                       // for int
   bool boolean_value;              // for boolean
   char *string_value;              // string value
   struct json_value_t *json_value; // object or array
