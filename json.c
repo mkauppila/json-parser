@@ -29,7 +29,9 @@ void json_free(struct json_value_t *root) {
     json_free(root->json_value);
   }
 
-  if (root->string_value) {
+  // `string_value` is also used for error messages which
+  // are not dynamically allocated
+  if (root->string_value && root->type != json_parsing_error) {
     free(root->string_value);
   }
   if (root->name) {
@@ -108,8 +110,16 @@ void parse_null_value(char *const string, int *index) {
   }
 }
 
+struct json_value_t *create_parse_error(struct json_value_t *node,
+                                        char *message) {
+  node->type = json_parsing_error;
+  node->string_value = message;
+  return node;
+}
+
 struct json_value_t *json_parse_internal(char *const string, int *cursor) {
   struct json_value_t *value = create_json_value();
+  char *error_message;
 
   parse_white_space(string, cursor);
 
@@ -118,8 +128,12 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     parse_white_space(string, cursor);
 
     struct json_value_t *children = NULL;
-    // jump over the '{'
-    ++(*cursor);
+    if (string[*cursor] != '{') {
+      // TODO: This can't actually happen!
+      return create_parse_error(value, "Missing trailing {");
+    } else {
+      ++(*cursor);
+    }
 
     parse_white_space(string, cursor);
 
@@ -127,7 +141,12 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     value->next = NULL;
 
     children = json_parse_internal(string, cursor);
-    value->children = children;
+    if (children->type == json_parsing_error) {
+      json_free(value);
+      return children;
+    } else {
+      value->children = children;
+    }
 
     parse_white_space(string, cursor);
 
@@ -146,7 +165,8 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     parse_white_space(string, cursor);
 
     if (string[*cursor] != '}') {
-      // fail with error
+      // So this could be also missing ,
+      return create_parse_error(value, "Missing trailing }");
     } else {
       ++(*cursor);
     }
@@ -160,7 +180,12 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     value->next = NULL;
 
     struct json_value_t *child = json_parse_internal(string, cursor);
-    value->children = child;
+    if (child->type == json_parsing_error) {
+      json_free(value);
+      return child;
+    } else {
+      value->children = child;
+    }
 
     parse_white_space(string, cursor);
 
@@ -179,7 +204,7 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
     parse_white_space(string, cursor);
 
     if (string[*cursor] != ']') {
-      // fail with error
+      return create_parse_error(value, "Missing trailing ]");
     } else {
       ++(*cursor);
     }
@@ -204,6 +229,8 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
 
       parse_white_space(string, cursor);
       if (string[*cursor] != ':') {
+        // This can never happen since it's mandatory for kv pair
+        // otherwise it'll be handled as string
         printf("Expecting ':', got '%c'\n", string[*cursor]);
       } else {
         (*cursor)++;
@@ -241,6 +268,8 @@ struct json_value_t *json_parse_internal(char *const string, int *cursor) {
   } else if (ch == 'n') {
     parse_null_value(string, cursor);
     value->type = json_null;
+  } else {
+    return create_parse_error(value, "Invalid input");
   }
 
   parse_white_space(string, cursor);
@@ -284,5 +313,7 @@ void json_print(struct json_value_t *root) {
          child = child->next) {
       json_print(child);
     }
+  } else if (value->type == json_parsing_error) {
+    printf("(key:value) = (NULL:%s)\n", value->string_value);
   }
 }

@@ -10,6 +10,7 @@ typedef enum {
   json_null,
   json_object,
   json_array,
+  json_parsing_error,
 } json_type_t;
 
 struct json_value_t {

@@ -229,6 +229,73 @@ void test_parsing_object_with_whitespace() {
   json_free(root);
 }
 
+void test_parsing_invalid_input() {
+  printf("Test parsing invalid input\n");
+
+  struct json_value_t *root = json_parse(",");
+
+  assert(root->type == json_parsing_error);
+  assert(strcmp(root->string_value, "Invalid input") == 0);
+
+  json_free(root);
+}
+
+void test_parsing_invalid_object_missing_trailing_curly_bracket() {
+  printf("Test parsing invalid object\n");
+
+  // missing the } at the end
+  struct json_value_t *root = json_parse("{\"foo\": 123");
+
+  assert(root->type == json_parsing_error);
+  assert(strcmp(root->string_value, "Missing trailing }") == 0);
+
+  json_free(root);
+}
+
+void test_parsing_invalid_object_contents() {
+  printf("Test parsing invalid object contents\n");
+
+  struct json_value_t *root = json_parse("{;}");
+
+  assert(root->type == json_parsing_error);
+  assert(strcmp(root->string_value, "Invalid input") == 0);
+
+  json_free(root);
+}
+
+void test_parsing_invalid_array_contents() {
+  printf("Test parsing invalid array contents\n");
+
+  struct json_value_t *root = json_parse("[;]");
+
+  assert(root->type == json_parsing_error);
+  assert(strcmp(root->string_value, "Invalid input") == 0);
+
+  json_free(root);
+}
+
+void test_parsing_invalid_array_missing_trailing_square_bracket() {
+  printf("Test parsing invalid array with missing ]\n");
+
+  struct json_value_t *root = json_parse("[123");
+
+  assert(root->type == json_parsing_error);
+  assert(strcmp(root->string_value, "Missing trailing ]") == 0);
+
+  json_free(root);
+}
+
+void test_parsing_invalid_object_with_missing_colon() {
+  printf("Test parsing invalid array with missing colon\n");
+
+  struct json_value_t *root = json_parse("{\"hello\" 123}");
+
+  assert(root->type == json_parsing_error);
+  assert(strcmp(root->string_value, "Missing trailing }") == 0);
+
+  json_free(root);
+}
+
 int main(int argc, char *argv[]) {
   test_parsing_null();
   test_parsing_true();
@@ -244,7 +311,12 @@ int main(int argc, char *argv[]) {
   test_parsing_null_with_whitespace();
   test_parsing_object_with_whitespace();
 
-  mem_leak_test();
+  test_parsing_invalid_input();
+  test_parsing_invalid_object_missing_trailing_curly_bracket();
+  test_parsing_invalid_object_contents();
+  test_parsing_invalid_array_contents();
+  test_parsing_invalid_array_missing_trailing_square_bracket();
+  test_parsing_invalid_object_with_missing_colon();
 
   printf("Tests OK\n");
 
