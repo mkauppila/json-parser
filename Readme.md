@@ -4,10 +4,9 @@ A C99 compliant json parser. Supports a subset of the [json specification](https
 
 ## Todo
 
-- support deallocating memory
 - add error detection and recovery
 - support decimal numbers
-- add higher level for iterations and so on.
+- add convenience level functions for iterations and so on.
 - what about creating json?
 
 ## Testing
